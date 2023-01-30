@@ -12,22 +12,34 @@
             <form @submit.prevent="updateproduct">
               <div class="form-group row">
                 <label class="col-sm-2 col-form-label">Nama Pesanan</label>
-                <input type="text" class="form-control" v-model="title">
+                <input type="text" class="form-control" v-model="title" />
               </div>
               <div class="form-group row">
                 <label class="col-sm-2 col-form-label">Harga Pesanan</label>
-                <input type="text" class="form-control" v-model="price">
+                <input type="text" class="form-control" v-model="price" />
               </div>
               <div class="form-group">
-                <label for="formFile" class="form-label mt-2">Gambar Pesanan</label>
-                <input class="form-control" type="file" @change="imgupload">
-                <input class="form-control" type="text" v-model="image" >
+                <label for="formFile" class="form-label mt-2"
+                  >Gambar Pesanan</label
+                >
+                <input class="form-control" type="file" @change="imgupload" />
+                <input class="form-control" type="hidden" v-model="image" />
               </div>
               <div class="form-group mt-4">
-                
-                <img :src="`http://localhost:8000/storage/${image}`" alt="" width="200"/>
+                <img
+                  :src="`http://localhost:8000/storage/${image}`"
+                  alt=""
+                  width="200"
+                />
+                <img :src="preview" alt="" width="200" />
               </div>
-              <button type="submit" class="btn btn-primary" style="float:right">Submit</button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                style="float: right"
+              >
+                Submit
+              </button>
             </form>
           </div>
         </div>
@@ -37,52 +49,67 @@
 </template>
 
 <script setup>
-import { ref,onMounted} from 'vue';
-import { useRoute} from 'vue-router';
-import axios from 'axios';
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import axios from "axios";
 
+const title = ref("");
+const price = ref("");
+const image = ref("");
+const preview = ref("");
+const new_image = ref("");
 
-const title=ref('');
-const price=ref('');
-const image=ref('');
-const new_image=ref('');
+const route = useRoute();
+const router = useRouter()
 
-const route=useRoute()
-
-const getProductById=async()=>{
+const getProductById = async () => {
   let url = `http://127.0.0.1:8000/api/crud/${route.params.id}`;
-      await axios.get(url).then(response => {
-        title.value = response.data.data.title;
-        price.value = response.data.data.price;
-        image.value = response.data.data.image;
-       
+  await axios
+    .get(url)
+    .then((response) => {
+      title.value = response.data.data.title;
+      price.value = response.data.data.price;
+      image.value = response.data.data.image;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
 
-      }).catch(error => {
-        console.log(error);
-      });
-}
+const imgupload = async (e) => {
+  image.value = "";
+  new_image.value = e.target.files[0];
 
-const imgupload=async(e)=>{
-  new_image.value=e.target.files[0];
-}
+  let fileReader = new FileReader();
+  fileReader.readAsDataURL(new_image.value);
+  fileReader.onload = (e) => {
+    preview.value = e.target.result;
+  };
+};
 
-const updateproduct=async()=>{
-  const formData=new FormData();
-  formData.append('title',title.value);
-  formData.append('price',price.value);
-  formData.append('image',image.value);
-  formData.append('new_image',new_image.value);
-  const res=await axios.post(`http://127.0.0.1:8000/api/crud/update/${route.params.id}`,formData);
+const updateproduct = async () => {
+  const formData = new FormData();
+  formData.append("title", title.value);
+  formData.append("price", price.value);
+  formData.append("image", image.value);
+  formData.append("new_image", new_image.value);
+  const res = await axios.post(
+    `http://127.0.0.1:8000/api/crud/update/${route.params.id}`,
+    formData
+  );
   console.log(res);
-        if (res){
-          alert("update berhasil");
-        }
-}
 
-onMounted(()=>{
+  if (res) {
+    alert("update berhasil");
+    router.push({
+      name: "listpage",
+    });
+  }
+};
+
+onMounted(() => {
   getProductById();
-  
-})
+});
 </script>
 
 
